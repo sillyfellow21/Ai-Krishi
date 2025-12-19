@@ -58,7 +58,11 @@ class UserProfileProvider with ChangeNotifier {
     if (count > 0) {
       _userProfile = updatedUser;
       // Also update the user in AuthProvider to ensure consistency
-      authProvider.currentUser?.name = name;
+      if (authProvider.currentUser != null) {
+        authProvider.currentUser!.name = name;
+        authProvider.currentUser!.phone = phone;
+        authProvider.currentUser!.address = address;
+      }
       notifyListeners();
       return true;
     }

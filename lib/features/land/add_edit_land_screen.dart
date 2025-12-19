@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:aikrishi/models/land_model.dart';
 import 'package:aikrishi/providers/land_provider.dart';
 import 'package:aikrishi/core/widgets/custom_text_field.dart';
+import 'package:aikrishi/core/utils/area_unit_utils.dart';
 
 class AddEditLandScreen extends StatefulWidget {
   final Land? land;
@@ -18,12 +19,16 @@ class _AddEditLandScreenState extends State<AddEditLandScreen> {
   late TextEditingController _nameController;
   late TextEditingController _areaController;
   late TextEditingController _locationController;
+  AreaUnit _selectedUnit = AreaUnit.acre; // Default unit
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.land?.landName ?? '');
-    _areaController = TextEditingController(text: widget.land?.area.toString() ?? '');
+    // If editing, we display the area in acres by default.
+    // A future improvement could be to store and retrieve the user's preferred unit.
+    _areaController = TextEditingController(
+        text: widget.land?.area.toString() ?? '');
     _locationController = TextEditingController(text: widget.land?.location ?? '');
   }
 
@@ -32,17 +37,23 @@ class _AddEditLandScreenState extends State<AddEditLandScreen> {
       final landProvider = Provider.of<LandProvider>(context, listen: false);
       final isUpdating = widget.land != null;
 
+      // Convert the input area to acres before saving
+      final double areaInAcres = AreaUnitUtils.convertToAcre(
+        double.parse(_areaController.text),
+        _selectedUnit,
+      );
+
       if (isUpdating) {
         await landProvider.updateLand(
           widget.land!.id,
           _nameController.text,
-          double.parse(_areaController.text),
+          areaInAcres, // Always save as acres
           _locationController.text,
         );
       } else {
         await landProvider.addLand(
           _nameController.text,
-          double.parse(_areaController.text),
+          areaInAcres, // Always save as acres
           _locationController.text,
         );
       }
@@ -65,14 +76,46 @@ class _AddEditLandScreenState extends State<AddEditLandScreen> {
               CustomTextField(
                 controller: _nameController,
                 labelText: "Land Name",
-                validator: (value) => value!.isEmpty ? 'Please enter a name' : null,
+                validator: (value) =>
+                    value!.isEmpty ? 'Please enter a name' : null,
               ),
               const SizedBox(height: 16),
-              CustomTextField(
-                controller: _areaController,
-                labelText: "Area (in acres)",
-                keyboardType: TextInputType.number,
-                validator: (value) => value!.isEmpty ? 'Please enter an area' : null,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: CustomTextField(
+                      controller: _areaController,
+                      labelText: "Area",
+                      keyboardType: TextInputType.number,
+                      validator: (value) =>
+                          value!.isEmpty ? 'Please enter an area' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 1,
+                    child: DropdownButtonFormField<AreaUnit>(
+                      value: _selectedUnit,
+                      decoration: const InputDecoration(
+                        labelText: 'Unit',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: AreaUnit.values.map((AreaUnit unit) {
+                        return DropdownMenuItem<AreaUnit>(
+                          value: unit,
+                          child: Text(AreaUnitUtils.getUnitString(unit)),
+                        );
+                      }).toList(),
+                      onChanged: (AreaUnit? newValue) {
+                        setState(() {
+                          _selectedUnit = newValue!;
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               CustomTextField(

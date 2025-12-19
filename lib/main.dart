@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:aikrishi/providers/auth_provider.dart';
@@ -29,9 +28,10 @@ class KrishibondhuApp extends StatelessWidget {
           create: (context) => LandProvider(authProvider: Provider.of<AuthProvider>(context, listen: false)),
           update: (context, authProvider, previous) => LandProvider(authProvider: authProvider),
         ),
-        ChangeNotifierProxyProvider<LandProvider, CropProvider>(
-          create: (context) => CropProvider(landProvider: Provider.of<LandProvider>(context, listen: false)),
-          update: (context, landProvider, previous) => CropProvider(landProvider: landProvider),
+        // **MODIFIED**: CropProvider now depends directly on AuthProvider
+        ChangeNotifierProxyProvider<AuthProvider, CropProvider>(
+          create: (context) => CropProvider(authProvider: Provider.of<AuthProvider>(context, listen: false)),
+          update: (context, authProvider, previous) => CropProvider(authProvider: authProvider),
         ),
       ],
       child: MaterialApp(
@@ -50,4 +50,3 @@ class KrishibondhuApp extends StatelessWidget {
     );
   }
 }
-

@@ -1,9 +1,9 @@
 class User {
   final String id;
-  final String name;
+  String name;
   final String email;
-  final String? phone;
-  final String? address;
+  String? phone;
+  String? address;
 
   User({
     required this.id,

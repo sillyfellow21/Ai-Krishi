@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:aikrishi/models/land_model.dart';
+import 'package:aikrishi/models/crop_model.dart';
 import 'package:aikrishi/providers/crop_provider.dart';
 import 'package:aikrishi/features/crop/add_crop_screen.dart';
+import 'package:aikrishi/features/crop/crop_detail_screen.dart'; // Import the new screen
 
 class LandDetailScreen extends StatefulWidget {
   final Land land;
@@ -22,6 +24,16 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         .fetchCropsByLand(widget.land.id);
   }
 
+  void _navigateAndRefreshAdd(BuildContext context) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AddCropScreen(landId: widget.land.id),
+      ),
+    );
+    Provider.of<CropProvider>(context, listen: false)
+        .fetchCropsByLand(widget.land.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,7 +45,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Area: ${widget.land.area} acres",
+            Text("Area: ${widget.land.area.toStringAsFixed(2)} acres",
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text("Location: ${widget.land.location ?? 'N/A'}",
@@ -55,13 +67,15 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                       return ListTile(
                         title: Text(crop.cropName),
                         subtitle: Text(
-                            'Variety: ${crop.variety ?? 'N/A'} | Planted: ${DateFormat.yMMMd().format(crop.plantingDate)}'),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            cropProvider.deleteCrop(crop.id);
-                          },
-                        ),
+                            'Planted: ${DateFormat.yMMMd().format(crop.plantingDate)}'),
+                        trailing: const Icon(Icons.arrow_forward_ios),
+                        onTap: () { // Navigate to the new CropDetailScreen
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => CropDetailScreen(crop: crop),
+                            ),
+                          );
+                        },
                       );
                     },
                   );
@@ -72,13 +86,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => AddCropScreen(landId: widget.land.id),
-            ),
-          );
-        },
+        onPressed: () => _navigateAndRefreshAdd(context),
         child: const Icon(Icons.add),
       ),
     );

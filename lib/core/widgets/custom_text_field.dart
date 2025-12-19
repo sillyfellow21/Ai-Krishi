@@ -6,6 +6,7 @@ class CustomTextField extends StatelessWidget {
   final bool obscureText;
   final String? Function(String?)? validator;
   final TextInputType keyboardType;
+  final int? maxLines; // The missing parameter
 
   const CustomTextField({
     super.key,
@@ -14,6 +15,7 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.validator,
     this.keyboardType = TextInputType.text,
+    this.maxLines = 1, // Default to a single line
   });
 
   @override
@@ -22,6 +24,7 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
+      maxLines: maxLines, // Use the maxLines parameter here
       decoration: InputDecoration(
         labelText: labelText,
         border: OutlineInputBorder(

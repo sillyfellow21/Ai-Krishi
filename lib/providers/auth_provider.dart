@@ -1,4 +1,3 @@
-'''
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -38,12 +37,12 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(String identifier, String password) async {
     final db = await _dbHelper.database;
     final maps = await db.query(
       DatabaseHelper.tableUsers,
-      where: 'email = ?',
-      whereArgs: [email],
+      where: 'email = ? OR phone = ?',
+      whereArgs: [identifier, identifier],
     );
 
     if (maps.isNotEmpty) {
@@ -61,7 +60,7 @@ class AuthProvider with ChangeNotifier {
     return false;
   }
 
-  Future<bool> register(String name, String email, String password) async {
+  Future<bool> register(String name, String email, String? phone, String password) async {
     final db = await _dbHelper.database;
     try {
       final userId = _uuid.v4();
@@ -71,18 +70,15 @@ class AuthProvider with ChangeNotifier {
           'id': userId,
           'name': name,
           'email': email,
+          'phone': phone,
           'passwordHash': PasswordHelper.hashPassword(password),
         },
         conflictAlgorithm: ConflictAlgorithm.abort,
       );
-      _currentUser = User(id: userId, name: name, email: email);
-      _isLoggedIn = true;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('userId', _currentUser!.id);
-      notifyListeners();
+      // Upon successful registration, just return true. Do not log the user in.
       return true;
     } catch (e) {
-      // Likely a UNIQUE constraint violation
+      // Likely a UNIQUE constraint violation on email or phone
       return false;
     }
   }
@@ -95,4 +91,3 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 }
-''
